@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include"log.h"
+#include<string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,15 +32,17 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+uint8_t data[]   = "Hello STM32H523";
+uint8_t digest[32] = {0};
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
+HASH_HandleTypeDef hhash;
 
 /* USER CODE BEGIN PV */
 
@@ -47,6 +50,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_HASH_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -73,7 +77,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  log_init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -84,10 +88,20 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_HASH_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_HASH_Start(&hhash,
+                         data,
+                         strlen((char*)data),
+                         digest,
+                         HAL_MAX_DELAY);
   /* USER CODE END 2 */
-
+   log_println("start program");
+   for(int i =0 ; i<32; i++)
+   {
+	   log_printf("%.2X ",digest[i]);
+   }
+   log_println("");
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -146,6 +160,36 @@ void SystemClock_Config(void)
   /** Configure the programming delay
   */
   __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_0);
+}
+
+/**
+  * @brief HASH Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_HASH_Init(void)
+{
+
+  /* USER CODE BEGIN HASH_Init 0 */
+
+  /* USER CODE END HASH_Init 0 */
+
+  /* USER CODE BEGIN HASH_Init 1 */
+
+  /* USER CODE END HASH_Init 1 */
+  hhash.Instance = HASH;
+  hhash.Init.DataType = HASH_BYTE_SWAP;
+  hhash.Init.Algorithm = HASH_ALGOSELECTION_SHA256;
+  hhash.Init.KeySize     = 0;
+  hhash.Init.pKey        = NULL;
+  if (HAL_HASH_Init(&hhash) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN HASH_Init 2 */
+
+  /* USER CODE END HASH_Init 2 */
+
 }
 
 /* USER CODE BEGIN 4 */

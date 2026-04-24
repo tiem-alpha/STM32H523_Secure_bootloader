@@ -6,6 +6,7 @@ Thiết kế bootloader cho STM32H523 với các tính năng:
 - Secure boot (verify chữ ký firmware)
 - Dual bank firmware
 - Resume khi mất điện giữa chừng
+- Trustzone
 
 ## Key Features
 - UART protocol custom
