@@ -153,17 +153,17 @@
         │                         │                         │
         ▼                         ▼                         ▼
 ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
-│  UART HAL    │         │  FLASH HAL   │         │  CRYPTO HAL   │
+│  UART HAL     │         │  FLASH HAL    │         │  CRYPTO HAL   │
 ├───────────────┤         ├───────────────┤         ├───────────────┤
 │ HAL_UART_Def  │         │ HAL_FLASH_Def │         │ HAL_RNG_Def   │
 │ HAL_UART      │         │ HAL_FLASH     │         │ HAL_RNG       │
 │ HAL_UARTEx    │         │ HAL_FLASHEx   │         │ HAL_HASH_Def  │
 └───────────────┘         └───────────────┘         │ HAL_HASH      │
-                                                      │ HAL_PKA_Def   │
-                                                      │ HAL_PKA       │
-                                                      │ HAL_CRYP_Def  │
-                                                      │ HAL_CRYP      │
-                                                      └───────────────┘
+                                                    │ HAL_PKA_Def   │
+                                                    │ HAL_PKA       │
+                                                    │ HAL_CRYP_Def  │
+                                                    │ HAL_CRYP      │
+                                                    └───────────────┘
 ```
 
 ## Baremetal Implementation
@@ -245,18 +245,18 @@
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │  Application (Non-Secure World)                                    │   │
-│  │                                                                   │   │
-│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐             │   │
-│  │  │ App Core     │ │ Non-Secure   │ │ App Data     │             │   │
-│  │  │               │ │ Peripherals  │ │               │             │   │
-│  │  │ - Main Loop  │ │               │ │               │             │   │
-│  │  │ - State Mach │ │ - UART       │ │ - Buffers    │             │   │
-│  │  │ - Call Gate  │ │ - GPIO       │ │ - Stack      │             │   │
-│  │  │ - veneer     │ │ - TIM        │ │ - Heap       │             │   │
+│  │                                                                    │   │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐             │     │
+│  │  │ App Core      │ │  Non-Secure   │ │  App Data     │             │   │
+│  │  │               │ │  Peripherals  │ │               │             │   │
+│  │  │ - Main Loop   │ │               │ │               │             │   │
+│  │  │ - State Mach  │ │ - UART        │ │ - Buffers     │             │   │
+│  │  │ - Call Gate   │ │ - GPIO        │ │ - Stack       │             │   │
+│  │  │ - veneer      │ │ - TIM         │ │ - Heap        │             │   │
 │  │  └───────────────┘ └───────────────┘ └───────────────┘             │   │
-│  │                                                                   │   │
-│  │  Non-Secure Flash: 0x08008000 - 0x08030000 (Bank A/B)           │   │
-│  │  Non-Secure SRAM: 0x20008000 - 0x20018000 (96KB)                 │   │
+│  │                                                                    │   │ 
+│  │  Non-Secure Flash: 0x08008000 - 0x08030000 (Bank A/B)              │   │
+│  │  Non-Secure SRAM: 0x20008000 - 0x20018000 (96KB)                   │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
