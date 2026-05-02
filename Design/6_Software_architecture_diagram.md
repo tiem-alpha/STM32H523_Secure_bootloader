@@ -11,24 +11,37 @@
 │                        APPLICATION LAYER                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐              │
-│  │   App Bank A   │ │   App Bank B   │ │  Bootloader    │              │
-│  │  (Active FW)   │ │  (Update FW)   │ │  (Secure BL)   │              │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘              │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐                │
+│  │   App Bank A   │ │   App Bank B   │ │  Bootloader       │                │
+│  │  (Active FW)   │ │  (Update FW)   │ │  (Secure BL)      │                │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘                │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
                                   │
-┌─────────────────────────────────┼───────────────────────────────────────────┐
-│                        MIDDLEWARE LAYER                                     │
-├─────────────────────────────────┼───────────────────────────────────────────┤
+┌─────────────────────────────────┼──────────────────────────────────────────────────────────┐
+│                         Service Layer                                                │
+├───────────────────────────────── ──────────────────────────────────────────────────────────┤
+│                                                                                            │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐  ┌─────────────────┐          │
+│  │  Secure Boot    │ │  Switch Manager │ │  Crypto Module  │  |  UART manager   |          │
+│  │                 │ │                 │ │                 │  |  - Queue        │          │
+│  │  - Signature    │ │  - Bank Switch  │ │  - SHA256       │  |  - Parser(Encode/Decode)│  |
+│  │  - Public Key   │ │  - Metadata     │ │  - RSA/ECDSA    │  |  - UART         │          |
+│  │  - CRC Verify   │ │  - Rollback     │ │  - RNG          │  |  -CRC           |          │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘  └─────────────────┘          │
+│                                                                                            │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+                                    |
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Middle Ware Layer                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐              │
-│  │  Secure Boot    │ │  Update Manager │ │  Crypto Module  │              │
-│  │  Manager        │ │                 │ │                 │              │
-│  │  - Signature    │ │  - Bank Switch  │ │  - SHA256       │              │
-│  │  - Public Key   │ │  - Metadata     │ │  - RSA/ECDSA    │              │
-│  │  - CRC Verify   │ │  - Rollback     │ │  - RNG          │              │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘              │
+│  ┌───────┐ ┌───────┐ ┌─────────┐  ┌──────┐ ┌──────┐  ┌──────┐  ┌──────┐     │
+│  │  SHA  │ │ Flash │ │ TIMER   │  | UART │ | Queue│  |Parser|  |CRC   |     |
+│  └───────┘ └───────┘ └─────────┘  └──────┘ └──────┘  └──────┘  └──────┘     │
+|  ┌───────┐  ┌───────┐ ┌───────┐                                             |
+|  |RNG    |  │ PKA   │ │ SHA   │                                             |
+|  └───────┘  └───────┘ └───────┘                                             |
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
                                   │
@@ -277,161 +290,5 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Module Structure
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        MODULE HIERARCHY                                      │
-└─────────────────────────────────────────────────────────────────────────────┘
 
-Secure Bootloader/
-├── Core/
-│   ├── Inc/
-│   │   ├── main.h              # Main header
-│   │   ├── stm32h5xx_hal_conf.h # HAL configuration
-│   │   ├── stm32h5xx_it.h     # Interrupt handlers
-│   │   └── log.h              # Debug logging
-│   └── Src/
-│       ├── main.c             # Main entry
-│       ├── system_stm32h5xx.c # System init
-│       ├── stm32h5xx_hal_msp.c # HAL MSP
-│       └── stm32h5xx_it.c    # ISR implementations
-│
-├── Drivers/
-│   └── STM32H5xx_HAL_Driver/
-│       ├── Src/
-│       │   ├── stm32h5xx_hal.c        # HAL core
-│       │   ├── stm32h5xx_hal_rng.c   # RNG driver
-│       │   ├── stm32h5xx_hal_hash.c  # HASH driver
-│       │   ├── stm32h5xx_hal_pka.c   # PKA driver
-│       │   ├── stm32h5xx_hal_cryp.c  # CRYP driver
-│       │   ├── stm32h5xx_hal_flash.c # FLASH driver
-│       │   ├── stm32h5xx_hal_uart.c  # UART driver
-│       │   └── stm32h5xx_hal_dma.c   # DMA driver
-│       └── Inc/
-│           ├── stm32h5xx_hal_rng.h
-│           ├── stm32h5xx_hal_hash.h
-│           ├── stm32h5xx_hal_pka.h
-│           ├── stm32h5xx_hal_cryp.h
-│           └── ...
-│
-├── Secure/
-│   ├── bl_secure.c            # Secure functions
-│   ├── bl_verify.c           # Signature verification
-│   ├── bl_crypto.c           # Crypto operations
-│   └── bl_metadata.c         # Metadata management
-│
-└── NonSecure/
-    ├── bl_update.c            # Firmware update
-    ├── bl_comm.c             # Communication
-    └── bl_rollback.c         # Rollback handling
-```
-
-## API Summary
-
-### HAL Crypto APIs
-
-```c
-// RNG API
-HAL_StatusTypeDef HAL_RNG_Init(RNG_HandleTypeDef *hrng);
-uint32_t HAL_RNG_GenerateRandom32(RNG_HandleTypeDef *hrng);
-HAL_StatusTypeDef HAL_RNG_GenerateRandom(RNG_HandleTypeDef *hrng, uint32_t *pRandom);
-
-// HASH API
-HAL_StatusTypeDef HAL_HASH_Init(HASH_HandleTypeDef *hhash, uint32_t algo);
-HAL_StatusTypeDef HAL_HASH_Append(HASH_HandleTypeDef *hhash, uint8_t *pInBuffer, uint32_t Size);
-HAL_StatusTypeDef HAL_HASH_Finish(HASH_HandleTypeDef *hhash, uint8_t *pInBuffer, uint32_t Size, uint8_t *pOutBuffer);
-
-// PKA API
-HAL_StatusTypeDef HAL_PKA_Init(PKA_HandleTypeDef *hpka);
-HAL_StatusTypeDef HAL_PKA_RSASSA_Verify(PKA_HandleTypeDef *hpka, PKA_RSASSA_VerifyParamsTypeDef *pParams);
-
-// CRYP API
-HAL_StatusTypeDef HAL_CRYP_Init(CRYP_HandleTypeDef *hcryp);
-HAL_StatusTypeDef HAL_CRYP_Encrypt(CRYP_HandleTypeDef *hcryp, uint32_t *pInput, uint16_t Size, uint32_t *pOutput);
-HAL_StatusTypeDef HAL_CRYP_Decrypt(CRYP_HandleTypeDef *hcryp, uint32_t *pInput, uint16_t Size, uint32_t *pOutput);
-```
-
-### Custom APIs
-
-```c
-// Bootloader APIs
-int BL_Init(void);
-int BL_VerifyFirmware(uint32_t bank);
-int BL_SwitchBank(uint32_t targetBank);
-int BL_JumpToApp(uint32_t appAddress);
-
-// Update APIs
-int UPDATE_Start(void);
-int UPDATE_ReceiveData(uint8_t *data, uint32_t len);
-int UPDATE_Complete(void);
-
-// Crypto APIs
-int CRYPTO_ComputeHash(uint8_t *data, uint32_t len, uint8_t *hash);
-int CRYPTO_VerifySignature(uint8_t *hash, uint8_t *signature, uint8_t *publicKey);
-int CRYPTO_GenerateRandom(uint8_t *buffer, uint32_t len);
-```
-
-## Memory Usage
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        MEMORY ALLOCATION                                    │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        FLASH (512KB)                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Secure Bootloader (32KB)                                                  │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  .text    (Code)         : 20KB                                    │   │
-│  │  .rodata  (Const)        : 4KB                                     │   │
-│  │  .secure  (Keys)         : 4KB                                     │   │
-│  │  .vector  (Vectors)     : 1KB                                     │   │
-│  │  .reserved               : 3KB                                    │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  Bank A (224KB)                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  .text    (Code)         : 180KB                                   │   │
-│  │  .rodata  (Const)        : 10KB                                    │   │
-│  │  .data    (Data)         : 2KB                                     │   │
-│  │  .bss     (Zero-init)    : 10KB                                    │   │
-│  │  .stack   (Stack)        : 8KB                                     │   │
-│  │  .heap    (Heap)         : 14KB                                    │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  Bank B (224KB)                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  Same structure as Bank A                                          │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  Metadata (8KB)                                                            │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  Bank A Info: 4KB                                                   │   │
-│  │  Bank B Info: 4KB                                                  │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        SRAM (128KB)                                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Secure SRAM (32KB)                                                        │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  Secure Stack: 4KB                                                  │   │
-│  │  Secure Heap: 4KB                                                   │   │
-│  │  Secure Data: 24KB                                                 │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-│  Non-Secure SRAM (96KB)                                                    │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  Non-Secure Stack: 8KB                                              │   │
-│  │  Non-Secure Heap: 8KB                                               │   │
-│  │  Non-Secure Data: 80KB                                              │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
